@@ -1,0 +1,128 @@
+import { Router, Request, Response } from "express";
+import { randomUUID } from "node:crypto";
+import { savePayment, Payment } from "../db/store.js";
+import { isAnomalous } from "../policy/anomalyCheck.js";
+import { recordOutcome } from "../policy/trustScore.js";
+import { transferUsdc } from "./../payments/arcTransfer.js";
+
+// POST /pay
+// Body: { fromAgentId, counterpartyId, amountUsdc, description }
+//
+// Flow:
+// 1. Run anomalyCheck against counterpartyId, amount, description
+// 2. If not flagged:
+//    - transfer USDC on Arc
+//    - record outcome as "paid"
+//    - save payment to store with status "paid"
+//    - respond { status: "paid", txHash }
+// 3. If flagged:
+//    - save payment to store with status "frozen"
+//    - record outcome as "frozen"
+//    - respond { status: "pending_approval", paymentId }
+
+const router = Router();
+
+router.post("/", async (req: Request, res: Response) => {
+  try {
+    const {
+      fromAgentId,
+      counterpartyId: rawCounterpartyId,
+      toCounterpartyId,
+      amountUsdc,
+      description = "",
+    } = req.body;
+
+    const counterpartyId = rawCounterpartyId || toCounterpartyId;
+
+    if (!fromAgentId || !counterpartyId || amountUsdc === undefined || amountUsdc === null) {
+      return res.status(400).json({
+        error: "Missing required fields: fromAgentId, counterpartyId, amountUsdc",
+      });
+    }
+
+    const numericAmount = Number(amountUsdc);
+    if (isNaN(numericAmount) || numericAmount <= 0) {
+      return res.status(400).json({
+        error: "amountUsdc must be a positive number",
+      });
+    }
+
+    const paymentId = `pay_${randomUUID()}`;
+
+    // 1. Run anomaly detection
+    const anomalyResult = await isAnomalous({
+      counterpartyId,
+      amount: numericAmount,
+      description,
+    });
+
+    // 2. If flagged -> save as "frozen" and return pending_approval
+    if (anomalyResult.flagged) {
+      console.log(
+        `[payments] Payment ${paymentId} flagged: ${anomalyResult.reason}. Freezing.`
+      );
+
+      const payment: Payment = {
+        id: paymentId,
+        fromAgentId,
+        counterpartyId,
+        amountUsdc: numericAmount,
+        description,
+        status: "frozen",
+        txHash: null,
+        timestamp: Date.now(),
+      };
+
+      await savePayment(payment);
+      await recordOutcome(counterpartyId, numericAmount, "frozen");
+
+      return res.status(200).json({
+        status: "pending_approval",
+        paymentId,
+      });
+    }
+
+    // 3. If not flagged -> execute transfer on Arc
+    console.log(
+      `[payments] Payment ${paymentId} approved. Executing transfer on Arc...`
+    );
+
+    const transferResult = await transferUsdc({
+      fromWalletId: fromAgentId,
+      toWalletId: counterpartyId,
+      amount: numericAmount,
+    });
+
+    const txHash = transferResult.txHash;
+
+    // Record positive outcome and update trust score
+    await recordOutcome(counterpartyId, numericAmount, "paid");
+
+    // Save payment as "paid"
+    const payment: Payment = {
+      id: paymentId,
+      fromAgentId,
+      counterpartyId,
+      amountUsdc: numericAmount,
+      description,
+      status: "paid",
+      txHash,
+      timestamp: Date.now(),
+    };
+
+    await savePayment(payment);
+
+    return res.status(200).json({
+      status: "paid",
+      txHash,
+    });
+  } catch (error: any) {
+    console.error("[payments] Error processing payment request:", error);
+    return res.status(500).json({
+      error: "Internal server error during payment processing",
+      message: error?.message || String(error),
+    });
+  }
+});
+
+export default router;

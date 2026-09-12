@@ -1,0 +1,23 @@
+{
+  "$comment": "Placeholder ERC-7730 clear-signing descriptor. Fill in the real contract/call schema once payments/arcTransfer.ts is wired to a real transfer call, so the Ledger device shows readable text instead of raw calldata. See Ledger's Clear Signing docs for the actual schema this needs to conform to.",
+  "context": {
+    "contract": {
+      "deployments": []
+    }
+  },
+  "metadata": {
+    "owner": "AgentGate"
+  },
+  "display": {
+    "formats": {
+      "transfer": {
+        "intent": "Agent payment",
+        "fields": [
+          { "path": "to", "label": "Paying" },
+          { "path": "amount", "label": "Amount (USDC)" },
+          { "path": "description", "label": "For" }
+        ]
+      }
+    }
+  }
+}
