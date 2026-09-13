@@ -6,6 +6,7 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "test:payments": "tsx scripts/testPayments.ts",
+    "test:ws": "tsx scripts/testWsEvents.ts",
     "setup:secret": "tsx scripts/setupEntitySecret.ts",
     "setup:wallet-set": "tsx scripts/setupWalletSet.ts"
   },

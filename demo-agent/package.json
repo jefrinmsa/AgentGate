@@ -1,0 +1,14 @@
+{
+  "name": "demo-agent",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "start": "tsx src/researchAgent.ts"
+  },
+  "dependencies": {
+    "@agentgate/middleware": "*"
+  },
+  "devDependencies": {
+    "tsx": "^4.16.0"
+  }
+}

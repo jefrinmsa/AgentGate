@@ -1,26 +1,25 @@
 import { Router, Request, Response } from "express";
 import { randomUUID } from "node:crypto";
-import { savePayment, Payment } from "../db/store.js";
+import { savePayment, getPayments, getTrustRecord, Payment } from "../db/store.js";
 import { isAnomalous } from "../policy/anomalyCheck.js";
 import { recordOutcome } from "../policy/trustScore.js";
-import { transferUsdc } from "./../payments/arcTransfer.js";
-
-// POST /pay
-// Body: { fromAgentId, counterpartyId, amountUsdc, description }
-//
-// Flow:
-// 1. Run anomalyCheck against counterpartyId, amount, description
-// 2. If not flagged:
-//    - transfer USDC on Arc
-//    - record outcome as "paid"
-//    - save payment to store with status "paid"
-//    - respond { status: "paid", txHash }
-// 3. If flagged:
-//    - save payment to store with status "frozen"
-//    - record outcome as "frozen"
-//    - respond { status: "pending_approval", paymentId }
+import { generateRiskBrief } from "../policy/riskBrief.js";
+import { transferUsdc } from "../payments/arcTransfer.js";
+import { broadcastEvent } from "../ws.js";
 
 const router = Router();
+
+// GET /pay -> list all payments, newest first
+router.get("/", async (_req: Request, res: Response) => {
+  try {
+    const payments = await getPayments();
+    const sorted = [...payments].sort((a, b) => b.timestamp - a.timestamp);
+    return res.status(200).json(sorted);
+  } catch (error: any) {
+    console.error("[payments] Failed to fetch payments:", error);
+    return res.status(500).json({ error: "Failed to fetch payments" });
+  }
+});
 
 router.post("/", async (req: Request, res: Response) => {
   try {
@@ -56,11 +55,21 @@ router.post("/", async (req: Request, res: Response) => {
       description,
     });
 
-    // 2. If flagged -> save as "frozen" and return pending_approval
+    // 2. If flagged -> generate risk brief, save as "frozen", broadcast WS event and return pending_approval
     if (anomalyResult.flagged) {
       console.log(
-        `[payments] Payment ${paymentId} flagged: ${anomalyResult.reason}. Freezing.`
+        `[payments] Payment ${paymentId} flagged: ${anomalyResult.reason}. Generating risk brief...`
       );
+
+      const trustHistory = await getTrustRecord(counterpartyId);
+      const riskBrief = await generateRiskBrief({
+        counterpartyId,
+        amount: numericAmount,
+        description,
+        trustHistory,
+      });
+
+      console.log(`[payments] Risk brief generated: "${riskBrief}". Freezing payment.`);
 
       const payment: Payment = {
         id: paymentId,
@@ -70,15 +79,30 @@ router.post("/", async (req: Request, res: Response) => {
         description,
         status: "frozen",
         txHash: null,
+        riskBrief,
         timestamp: Date.now(),
       };
 
       await savePayment(payment);
       await recordOutcome(counterpartyId, numericAmount, "frozen");
 
+      broadcastEvent({
+        type: "frozen",
+        paymentId,
+        counterparty: counterpartyId,
+        counterpartyId,
+        amount: numericAmount,
+        amountUsdc: numericAmount,
+        description,
+        riskBrief,
+        reason: anomalyResult.reason,
+        timestamp: payment.timestamp,
+      });
+
       return res.status(200).json({
         status: "pending_approval",
         paymentId,
+        riskBrief,
       });
     }
 
@@ -111,6 +135,19 @@ router.post("/", async (req: Request, res: Response) => {
     };
 
     await savePayment(payment);
+
+    // Broadcast "paid" event to WebSocket clients
+    broadcastEvent({
+      type: "paid",
+      paymentId,
+      counterparty: counterpartyId,
+      counterpartyId,
+      amount: numericAmount,
+      amountUsdc: numericAmount,
+      description,
+      txHash,
+      timestamp: payment.timestamp,
+    });
 
     return res.status(200).json({
       status: "paid",

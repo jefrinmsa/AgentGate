@@ -14,6 +14,7 @@ export interface Payment {
   description: string;
   status: PaymentStatus;
   txHash?: string | null;
+  riskBrief?: string | null;
   timestamp: number;
 }
 

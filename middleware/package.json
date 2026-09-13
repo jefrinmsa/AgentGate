@@ -1,10 +1,12 @@
 {
-  "name": "agentgate",
-  "private": true,
-  "workspaces": ["server", "dashboard", "middleware", "demo-agent"],
+  "name": "@agentgate/middleware",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "src/index.ts",
   "scripts": {
-    "dev:server": "npm run dev --workspace=server",
-    "dev:dashboard": "npm run dev --workspace=dashboard",
-    "dev:demo": "npm run start --workspace=demo-agent"
+    "build": "tsc"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.0"
   }
 }

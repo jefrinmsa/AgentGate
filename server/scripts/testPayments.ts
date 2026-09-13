@@ -1,7 +1,9 @@
+import http from "node:http";
 import express from "express";
 import { initiateDeveloperControlledWalletsClient } from "@circle-fin/developer-controlled-wallets";
 import "dotenv/config";
 import paymentsRouter from "../src/routes/payments.js";
+import { initWebSocketServer, closeWebSocketServer } from "../src/ws.js";
 import { createAgentWallet } from "../src/payments/circleWallets.js";
 import { setTrustRecord, getPayments, writePayments } from "../src/db/store.js";
 
@@ -91,7 +93,9 @@ async function runPaymentTest() {
     const app = express();
     app.use(express.json());
     app.use("/pay", paymentsRouter);
-    serverInstance = app.listen(4000);
+    serverInstance = http.createServer(app);
+    initWebSocketServer(serverInstance);
+    serverInstance.listen(4000);
     baseUrl = "http://localhost:4000";
     console.log(`  Local server listening on ${baseUrl}`);
   }
@@ -200,6 +204,7 @@ async function runPaymentTest() {
   );
 
   if (serverInstance) {
+    await closeWebSocketServer();
     serverInstance.close();
   }
 }
