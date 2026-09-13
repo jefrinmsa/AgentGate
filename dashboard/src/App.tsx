@@ -173,11 +173,8 @@ export const App: React.FC = () => {
         <ApprovalModal
           payment={selectedPayment}
           onClose={() => setSelectedPayment(null)}
-          onApprove={(payment) => {
-            console.log("[dashboard] Reviewing payment with Ledger:", payment);
-            // Will integrate with ledgerClient in upcoming steps
-            alert(`Reviewing payment ${payment.paymentId} on physical Ledger device.`);
-            setSelectedPayment(null);
+          onResolved={(payment, approved) => {
+            console.log(`[dashboard] Payment ${payment.paymentId} resolved: approved=${approved}`);
           }}
         />
       )}

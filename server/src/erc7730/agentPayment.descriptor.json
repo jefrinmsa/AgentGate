@@ -1,21 +1,25 @@
 {
-  "$comment": "Placeholder ERC-7730 clear-signing descriptor. Fill in the real contract/call schema once payments/arcTransfer.ts is wired to a real transfer call, so the Ledger device shows readable text instead of raw calldata. See Ledger's Clear Signing docs for the actual schema this needs to conform to.",
+  "$schema": "https://eips.ethereum.org/assets/eip-7730/erc7730-v1.schema.json",
   "context": {
+    "$id": "agentgate-usdc-arc-testnet",
     "contract": {
-      "deployments": []
+      "deployments": [
+        { "chainId": 5042002, "address": "0x3600000000000000000000000000000000000000" }
+      ]
     }
   },
   "metadata": {
-    "owner": "AgentGate"
+    "owner": "AgentGate",
+    "info": { "url": "https://github.com/YOUR_USERNAME/agentgate" },
+    "token": { "ticker": "USDC", "name": "USD Coin", "decimals": 6 }
   },
   "display": {
     "formats": {
-      "transfer": {
+      "transfer(address to,uint256 amount)": {
         "intent": "Agent payment",
         "fields": [
           { "path": "to", "label": "Paying" },
-          { "path": "amount", "label": "Amount (USDC)" },
-          { "path": "description", "label": "For" }
+          { "path": "amount", "label": "Amount", "format": "tokenAmount" }
         ]
       }
     }

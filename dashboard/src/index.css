@@ -710,3 +710,411 @@ body {
   transform: translateY(-1px);
   box-shadow: 0 6px 18px rgba(245, 158, 11, 0.45);
 }
+
+/* ==========================================================================
+   ERC-7730 Ledger Device Simulator Styles & Modal Expansion
+   ========================================================================== */
+
+.modal-card.modal-card-wide {
+  max-width: 860px;
+  width: 95%;
+  background: rgba(13, 17, 28, 0.96);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.75), 0 0 40px rgba(245, 158, 11, 0.12);
+}
+
+/* Disclaimer Banner */
+.simulator-disclaimer-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: rgba(59, 130, 246, 0.09);
+  border: 1px solid rgba(59, 130, 246, 0.28);
+  border-radius: var(--radius-sm);
+  margin-bottom: 18px;
+}
+
+.disclaimer-icon {
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.disclaimer-text {
+  font-size: 0.78rem;
+  color: #93c5fd;
+  line-height: 1.45;
+  font-weight: 500;
+}
+
+/* Split Layout */
+.modal-split-layout {
+  display: grid;
+  grid-template-columns: 1.15fr 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+@media (max-width: 740px) {
+  .modal-split-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.modal-info-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  background: rgba(0, 0, 0, 0.35);
+  padding: 18px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+}
+
+.panel-section-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 2px;
+}
+
+.modal-device-panel {
+  display: flex;
+  justify-content: center;
+}
+
+/* Device Simulator Container & Chassis */
+.device-simulator-container {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.device-chassis {
+  width: 100%;
+  max-width: 350px;
+  background: linear-gradient(165deg, #1b202c 0%, #10141d 55%, #0b0e14 100%);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 20px;
+  padding: 16px;
+  box-shadow: 
+    0 16px 40px rgba(0, 0, 0, 0.8),
+    0 0 0 1px rgba(255, 255, 255, 0.05),
+    inset 0 1px 1px rgba(255, 255, 255, 0.2);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Simulated USB / Top Bezel */
+.device-top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.device-brand-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.device-brand-name {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: #cbd5e1;
+}
+
+.device-dot-active {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: #10b981;
+  box-shadow: 0 0 8px #10b981;
+  animation: pulse-dot 2s infinite ease-in-out;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(0.85); }
+}
+
+.device-mode-pill {
+  font-size: 0.62rem;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  color: #94a3b8;
+  background: rgba(255, 255, 255, 0.06);
+  padding: 3px 7px;
+  border-radius: var(--radius-full);
+  letter-spacing: 0.04em;
+}
+
+/* Device Screen Area (OLED Simulation) */
+.device-screen {
+  background: #05080e;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 14px;
+  min-height: 220px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.85);
+}
+
+/* Screen Intent Header */
+.screen-header {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 8px;
+  margin-bottom: 10px;
+}
+
+.screen-intent-badge {
+  display: inline-block;
+  font-size: 0.6rem;
+  font-weight: 800;
+  color: #60a5fa;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.screen-intent-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin-top: 2px;
+}
+
+.screen-chain-tag {
+  font-size: 0.68rem;
+  color: #94a3b8;
+  font-family: var(--font-mono);
+  margin-top: 2px;
+}
+
+/* Screen Clear-Signing Fields */
+.screen-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.screen-field-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.screen-field-label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.screen-field-value {
+  color: #e2e8f0;
+  font-size: 0.85rem;
+}
+
+.screen-field-value.mono-address {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  word-break: break-all;
+  color: #cbd5e1;
+  background: rgba(255, 255, 255, 0.04);
+  padding: 4px 6px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.screen-field-value.amount-highlight {
+  font-family: var(--font-mono);
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #38bdf8;
+}
+
+.screen-token-symbol {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+.screen-context-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.65rem;
+  color: #64748b;
+  margin-top: 4px;
+  padding-top: 6px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.06);
+}
+
+/* Busy Overlay */
+.screen-busy-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(5, 8, 14, 0.9);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-size: 0.78rem;
+  color: #93c5fd;
+  text-align: center;
+  padding: 16px;
+}
+
+.screen-spinner {
+  width: 24px;
+  height: 24px;
+  border: 2px solid rgba(147, 197, 253, 0.2);
+  border-top-color: #60a5fa;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.screen-error-box {
+  margin-top: 8px;
+  padding: 6px 8px;
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  border-radius: 6px;
+  color: #fca5a5;
+  font-size: 0.72rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Screen Outcome States */
+.screen-outcome-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 24px 12px;
+  gap: 8px;
+  height: 100%;
+}
+
+.outcome-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  font-weight: 800;
+}
+
+.outcome-paid .outcome-icon {
+  background: rgba(16, 185, 129, 0.2);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.4);
+}
+
+.outcome-rejected .outcome-icon {
+  background: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.4);
+}
+
+.outcome-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.outcome-desc {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  line-height: 1.4;
+}
+
+.device-btn-dismiss {
+  margin-top: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #e2e8f0;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+/* Device Physical Hardware Buttons */
+.device-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.device-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  border: 1px solid transparent;
+}
+
+.device-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.device-btn-reject {
+  background: linear-gradient(145deg, #2b171a, #1f1114);
+  color: #fca5a5;
+  border-color: rgba(239, 68, 68, 0.35);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.device-btn-reject:hover:not(:disabled) {
+  background: linear-gradient(145deg, #3f1e23, #2b171a);
+  color: #fecaca;
+  border-color: rgba(239, 68, 68, 0.6);
+  transform: translateY(-1px);
+}
+
+.device-btn-approve {
+  background: linear-gradient(145deg, #0d3b2a, #08291c);
+  color: #6ee7b7;
+  border-color: rgba(16, 185, 129, 0.45);
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.device-btn-approve:hover:not(:disabled) {
+  background: linear-gradient(145deg, #134e38, #0d3b2a);
+  color: #a7f3d0;
+  border-color: rgba(16, 185, 129, 0.7);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(16, 185, 129, 0.35);
+}
+

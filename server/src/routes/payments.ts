@@ -1,11 +1,11 @@
 import { Router, Request, Response } from "express";
 import { randomUUID } from "node:crypto";
-import { savePayment, getPayments, getTrustRecord, Payment } from "../db/store.js";
+import { savePayment, getPayments, getPaymentById, getTrustRecord, Payment } from "../db/store.js";
 import { isAnomalous } from "../policy/anomalyCheck.js";
 import { recordOutcome } from "../policy/trustScore.js";
 import { generateRiskBrief } from "../policy/riskBrief.js";
 import { transferUsdc } from "../payments/arcTransfer.js";
-import { broadcastEvent } from "../ws.js";
+import { broadcastEvent, broadcastResolved } from "../ws.js";
 
 const router = Router();
 
@@ -162,4 +162,92 @@ router.post("/", async (req: Request, res: Response) => {
   }
 });
 
+// POST /pay/:id/resolve -> approve or reject a frozen payment
+router.post("/:id/resolve", async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { approved, action } = req.body;
+
+    const payment = await getPaymentById(id);
+    if (!payment) {
+      return res.status(404).json({ error: `Payment "${id}" not found` });
+    }
+
+    if (payment.status !== "frozen") {
+      return res.status(400).json({
+        error: `Payment "${id}" has status "${payment.status}". Only frozen payments can be resolved.`,
+        payment,
+      });
+    }
+
+    const isApproved = approved === true || approved === "true" || action === "approve";
+
+    if (isApproved) {
+      console.log(`[payments] Resolving payment ${id}: APPROVED by human. Executing transfer on Arc...`);
+
+      const transferResult = await transferUsdc({
+        fromWalletId: payment.fromAgentId,
+        toWalletId: payment.counterpartyId,
+        amount: payment.amountUsdc,
+      });
+
+      const txHash = transferResult.txHash;
+      payment.status = "paid";
+      payment.txHash = txHash;
+      await savePayment(payment);
+
+      await recordOutcome(payment.counterpartyId, payment.amountUsdc, "paid");
+
+      broadcastResolved({
+        paymentId: payment.id,
+        counterparty: payment.counterpartyId,
+        counterpartyId: payment.counterpartyId,
+        amount: payment.amountUsdc,
+        amountUsdc: payment.amountUsdc,
+        approved: true,
+        txHash,
+        description: payment.description,
+        timestamp: Date.now(),
+      });
+
+      return res.status(200).json({
+        status: "paid",
+        txHash,
+        payment,
+      });
+    } else {
+      console.log(`[payments] Resolving payment ${id}: REJECTED by human operator.`);
+
+      payment.status = "rejected";
+      await savePayment(payment);
+
+      await recordOutcome(payment.counterpartyId, payment.amountUsdc, "rejected");
+
+      broadcastResolved({
+        paymentId: payment.id,
+        counterparty: payment.counterpartyId,
+        counterpartyId: payment.counterpartyId,
+        amount: payment.amountUsdc,
+        amountUsdc: payment.amountUsdc,
+        approved: false,
+        txHash: null,
+        description: payment.description,
+        timestamp: Date.now(),
+      });
+
+      return res.status(200).json({
+        status: "rejected",
+        payment,
+      });
+    }
+  } catch (error: any) {
+    console.error(`[payments] Error resolving payment ${req.params.id}:`, error);
+    return res.status(500).json({
+      error: "Internal server error during payment resolution",
+      message: error?.message || String(error),
+    });
+  }
+});
+
 export default router;
+
