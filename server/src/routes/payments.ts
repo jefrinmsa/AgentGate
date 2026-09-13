@@ -84,7 +84,6 @@ router.post("/", async (req: Request, res: Response) => {
       };
 
       await savePayment(payment);
-      await recordOutcome(counterpartyId, numericAmount, "frozen");
 
       broadcastEvent({
         type: "frozen",
